@@ -16,7 +16,7 @@
       <ul>
         <li><a href="about.php">Sobre</a></li>
         <li><a href="services-list.php">Services</a></li>
-        <li><a href="register.php">Register</a></li>
+        <li><a href="views/register.php">Register</a></li>
         <li><a href="ForgotPassword.php">Email-reset</a></li>
       </ul>
     </nav>

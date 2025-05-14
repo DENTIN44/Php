@@ -1,64 +1,103 @@
 <?php
-require_once 'Models/Database.php';
-require_once 'Models/PasswordReset.php';
+// Controller/UserController.php
+require_once __DIR__ . '/../Models/Database.php';
+require_once __DIR__ . '/../Models/User.php';
 
-// Set the path to the .env file (replace with your correct path)
-$envPath = __DIR__ . '/.env';
-$db = new Database($envPath);  // Initialize the Database class
+// Bootstrapping
+$envPath = __DIR__ . '/../.env';
+$db = new Database($envPath);
+$pdo = $db->getConnection();
 
-if (isset($_GET["key"]) && isset($_GET["email"]) && isset($_GET["action"]) && ($_GET["action"] == "reset") && !isset($_POST["action"])) {
-    $key = $_GET["key"];
-    $email = $_GET["email"];
+// Models
+$userReg  = new UserRegistration($pdo);
+$userAuth = new UserAuth($pdo);
+$userHand = new UserHandler($pdo);
 
-    // Create PasswordReset instance
-    $passwordReset = new PasswordReset($db, $email, $key);
+// Determine action
+$action = $_REQUEST['action'] ?? 'login';
 
-    if (!$passwordReset->isLinkValid()) {
-        // If the reset link is invalid or expired
-        echo '<h2>Invalid Link</h2>
-        <p>The link is invalid or expired. Either you did not copy the correct link
-        from the email, or you have already used the key in which case it is 
-        deactivated.</p>';
-    } else {
-        // If the link is valid
-        echo '
-        <br />
-        <form method="post" action="" name="update">
-        <input type="hidden" name="action" value="update" />
-        <br /><br />
-        <label><strong>Enter New Password:</strong></label><br />
-        <input type="password" name="pass1" maxlength="15" required />
-        <br /><br />
-        <label><strong>Re-Enter New Password:</strong></label><br />
-        <input type="password" name="pass2" maxlength="15" required/>
-        <br /><br />
-        <input type="hidden" name="email" value="' . htmlspecialchars($email) . '"/>
-        <input type="submit" value="Reset Password" />
-        </form>';
+try {
+    switch ($action) {
+        case 'register':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                // Register flow
+                $userReg->registerUser(
+                    trim($_POST['username'] ?? ''),
+                    trim($_POST['email'] ?? ''),
+                    trim($_POST['password'] ?? '')
+                );
+                header('Location: index.php?action=login');
+                exit;
+            }
+            include __DIR__ . '/../Views/register.php';
+            break;
+
+        case 'login':
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $user = $userAuth->login(
+                    trim($_POST['email'] ?? ''),
+                    trim($_POST['password'] ?? '')
+                );
+                if ($user) {
+                    session_start();
+                    $_SESSION['user'] = $user;
+                    header('Location: index.php?action=dashboard');
+                    exit;
+                } else {
+                    $error = 'Invalid credentials.';
+                }
+            }
+            include __DIR__ . '/../views/login.php';
+            break;
+
+        case 'logout':
+            session_start();
+            session_unset();
+            session_destroy();
+            header('Location: index.php?action=login');
+            exit;
+
+        case 'dashboard':
+            session_start();
+            if (empty($_SESSION['user'])) {
+                header('Location: index.php?action=login');
+                exit;
+            }
+            $users = $userHand->fetchUsers();
+            include __DIR__ . '/../Views/dashboard.php';
+            break;
+
+        case 'edit':
+            session_start();
+            if (empty($_SESSION['user'])) throw new Exception('Unauthorized');
+            $id = (int)($_GET['id'] ?? $_SESSION['user']['id']);
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $updated = $userHand->updateUser(
+                    $id,
+                    trim($_POST['username'] ?? ''),
+                    trim($_POST['email'] ?? ''),
+                    trim($_POST['password'] ?? '') ?: null
+                );
+                header('Location: index.php?action=dashboard');
+                exit;
+            }
+            $userData = $userHand->fetchUsers($id);
+            $userData = $userData[0] ?? null;
+            include __DIR__ . '/../Views/edit-user.php';
+            break;
+
+        case 'delete':
+            session_start();
+            if (empty($_SESSION['user'])) throw new Exception('Unauthorized');
+            $id = (int)($_GET['id'] ?? 0);
+            $userHand->deleteUser($id);
+            header('Location: index.php?action=dashboard');
+            exit;
+
+        default:
+            throw new Exception('Unknown action: ' . htmlspecialchars($action));
     }
+} catch (Exception $e) {
+    $error = $e->getMessage();
+    include __DIR__ . '/../Views/error.php';
 }
-
-if (isset($_POST["action"]) && $_POST["action"] == "update") {
-    $email = $_POST["email"];
-    $pass1 = $_POST["pass1"];
-    $pass2 = $_POST["pass2"];
-
-    if ($pass1 !== $pass2) {
-        // If passwords don't match
-        echo "<p>Password do not match, both password should be same.<br /><br /></p>";
-    } else {
-        // Create PasswordReset instance and update the password
-        $passwordReset = new PasswordReset($db, $email, null);
-        if ($passwordReset->updatePassword($pass1)) {
-            // Password updated successfully
-            echo '<div class="error"><p>Congratulations! Your password has been updated successfully.</p>
-            <p><a href="login.php">Click here</a> to Login.</p></div><br />';
-        } else {
-            // Error updating password
-            echo '<p>Error updating password.</p>';
-        }
-    }
-}
-
-$db->close();  // Close the database connection
-?>
