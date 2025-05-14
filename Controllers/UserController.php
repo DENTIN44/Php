@@ -21,7 +21,7 @@ try {
         case 'register':
             if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Register flow
-                $userReg->registerUser(
+                $userReg->registerUser  (
                     trim($_POST['username'] ?? ''),
                     trim($_POST['email'] ?? ''),
                     trim($_POST['password'] ?? '')
