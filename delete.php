@@ -6,8 +6,8 @@ require_once 'Controllers/UserController.php';  // Include the UserController
 
 
 // Check if the form is submitted
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['service_id'])) {
-    $serviceId = intval($_POST['service_id']); // Convert user ID to an integer to prevent SQL injection
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['user_id'])) {
+    $userId = intval($_POST['user_id']); // Convert user ID to an integer to prevent SQL injection
 
     try {
 
@@ -16,10 +16,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['service_id'])) {
       $conn = $database->getConnection();  // Get the connection
 
         // Create an instance of the UserManager class
-        $serviceManager = new ServiceHandler($conn);
+        $serviceManager = new UserHandler($conn);
 
         // Call the deleteUser method
-        $serviceManager->deleteService($serviceId);
+        $serviceManager->deleteUser($userId);
     } catch (Exception $e) {
         // Handle exceptions (e.g., log errors, display user-friendly messages)
         echo "Error: " . $e->getMessage();

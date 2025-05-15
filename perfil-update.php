@@ -16,24 +16,24 @@ try {
     }
 
     // Instantiate the User class
-    $serviceHandler = new ServiceHandler($conn);
+    $serviceHandler = new UserHandler($conn);
 
     $idReceived = 0;
 
    // Fetch service details if service_id is provided (via GET or POST)
-if (isset($_GET['service_id'])) {
+if (isset($_GET['user_id'])) {
     // Load the form: service_id is in the query string
-    $idReceived = intval($_GET['service_id']);
-} elseif (isset($_POST['service_id'])) {
-    // Form submission: service_id is in the POST data
-    $idReceived = intval($_POST['service_id']);
+    $idReceived = intval($_GET['user_id']);
+} elseif (isset($_POST['user_id'])) {
+    // Form submission: user_id is in the POST data
+    $idReceived = intval($_POST['user_id']);
 } else {
-    // No service_id provided
-    echo "Service ID not provided.";
+    // No user_id provided
+    echo "user ID not provided.";
     exit;
 }
 
-// Fetch the service details
+// Fetch the user details
 $service = $serviceHandler->fetchServices($idReceived);
 
 if ($service) {
@@ -46,7 +46,7 @@ if ($service) {
 }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_service'])) {
-        $serviceId = intval($_POST['service_id']);
+        $userId = intval($_POST['user_id']);
         $name = trim($_POST['name']);
         $description = trim($_POST['description']);
         $price = floatval($_POST['price']);
@@ -56,8 +56,8 @@ if ($service) {
             throw new Exception("All fields are required, and price must be greater than 0.");
         }
 
-        // Call the updateService method with all 4 arguments
-        if ($serviceHandler->updateService($serviceId, $name, $description, $price)) {
+        // Call the updateuser method with all 4 arguments
+        if ($serviceHandler->updateService($userId, $name, $description, $price)) {
             header('Location: services-list.php'); // Redirect to the services list
             exit;
         }

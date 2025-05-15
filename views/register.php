@@ -73,12 +73,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $new_name = uniqid('', true) . '.' . $file_ext;
         $file_path = $upload_dir . $new_name;
 
-        if (move_uploaded_file($_FILES['photo']['tmp_name'], $file_path)) {
-            $photo = $new_name;
+        // Move the file
+        if (move_uploaded_file($_FILES['photo']['tmp_name'], $file_path . $new_name)) {
+            $photo = '' . $new_name;  // Relative path for DB
         } else {
             die("Failed to move the uploaded file.");
         }
-    }
+
+        // Debugging check
+        // echo "Photo Path: " . $photo;  // Make sure this is set correctly
+            }
 
     try {
         $registrationService->registerUser($username, $email, $password, $photo);
