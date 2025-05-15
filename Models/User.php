@@ -96,38 +96,6 @@ class UserHandler {
     }
 
     /**
- * Fetch all users, or search by ID or by a pattern in username/email.
- */
-// public function fetchUsers(?int $id = null, ?string $search = null): array {
-//     // Fetch by ID
-//     if ($id !== null) {
-//         $stmt = $this->pdo->prepare('SELECT id, username, email, createdAt FROM users WHERE id = :id');
-//         $stmt->execute([':id' => $id]);
-//         $row = $stmt->fetch();
-//         return $row ? [$row] : [];
-//     }
-
-//     // Search by pattern in username or email
-//     if ($search !== null) {
-//         // If single character, assume prefix search; else general pattern
-//         $pattern = strlen($search) === 1 ? $search . '%' : '%' . $search . '%';
-
-//         $stmt = $this->pdo->prepare(
-//             'SELECT id, username, email, createdAt 
-//              FROM users 
-//              WHERE username LIKE :pattern OR email LIKE :pattern 
-//              ORDER BY createdAt DESC'
-//         );
-//         $stmt->execute([':pattern' => $pattern]);
-//         return $stmt->fetchAll(PDO::FETCH_ASSOC);
-//     }
-
-//     // Default: fetch all users
-//     $stmt = $this->pdo->query('SELECT id, username, email, createdAt FROM users ORDER BY createdAt DESC');
-//     return $stmt->fetchAll(PDO::FETCH_ASSOC);
-// }
-
-    /**
      * Updates user data. Password optional.
      */
     public function updateUser(int $id, string $username, string $email, ?string $password = null): bool {
