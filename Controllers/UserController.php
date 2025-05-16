@@ -4,7 +4,7 @@ require_once __DIR__ . '/../Models/Database.php';
 require_once __DIR__ . '/../Models/User.php';
 
 // Bootstrapping
-$envPath = __DIR__ . '/../.env';
+$envPath = realpath(__DIR__ . '/../');  // <-- directory, not the file
 $db = new Database($envPath);
 $pdo = $db->getConnection();
 

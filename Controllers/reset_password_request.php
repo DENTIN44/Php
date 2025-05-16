@@ -1,31 +1,29 @@
 <?php
 require_once 'Models/Database.php';
-require_once 'Models/PasswordResetRequest.php';
+require_once 'Models/PasswordReset.php';
 
 if (isset($_POST["email"]) && !empty($_POST["email"])) {
-    $email = $_POST["email"];
-    $email = filter_var($email, FILTER_SANITIZE_EMAIL);
-    $email = filter_var($email, FILTER_VALIDATE_EMAIL);
-    
-    if (!$email) {
+    // Sanitize and validate email
+    $email = filter_var($_POST["email"], FILTER_SANITIZE_EMAIL);
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = "<p>Invalid email address, please enter a valid email address!</p>";
     } else {
         // Create Database instance
-        $db = new Database(__DIR__ . '/.env');
-        $passwordReset = new PasswordResetRequest($db, $email);
+        $db = new Database(realpath(__DIR__ . '/../'));  // path to your .env folder
 
+        // Create PasswordReset instance
+        $passwordReset = new PasswordReset($db, $email);
+
+        // Check if email exists in your users table
         if (!$passwordReset->isEmailValid()) {
             $error = "<p>No user is registered with this email address!</p>";
         } else {
-            $key = $passwordReset->generateResetKey();
-            $expFormat = mktime(date("H"), date("i"), date("s"), date("m"), date("d") + 1, date("Y"));
-            $expDate = date("Y-m-d H:i:s", $expFormat);
+            // Generate and store token with expiration
+            $token = $passwordReset->generateResetKey();
 
-            // Store the key in the database
-            $passwordReset->storeResetKey($key, $expDate);
-
-            // Send the email
-            $message = $passwordReset->sendResetEmail($key);
+            // Send the reset email with the token
+            $message = $passwordReset->sendResetEmail($token);
         }
     }
 

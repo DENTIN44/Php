@@ -3,11 +3,26 @@ require_once 'Models/Database.php';
 require_once 'Models/PasswordReset.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['email'])) {
-    $email = $_POST['email'];
-    $db = new Database('localhost', 'username', 'password', 'dbname');
-    $passwordReset = new PasswordReset($db, $email, null);
+    $email = trim($_POST['email']);
 
-    if ($passwordReset->sendResetEmail()) {
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        echo '<div class="alert alert-danger">Invalid email address provided.</div>';
+        exit;
+    }
+
+    // Create database connection (make sure credentials are correct)
+    $db = new Database(realpath(__DIR__));
+    $pdo = $db->getConnection();
+
+    // Generate secure random key
+    
+    // Now create PasswordReset object with the key generated
+    $passwordReset = new PasswordReset($db, $email);
+    
+    $resetKey = $passwordReset->generateResetKey();
+    
+    // Send email with the key
+    if ($passwordReset->sendResetEmail($resetKey)) {
         echo '<div class="alert alert-success">An email has been sent to your address with instructions to reset your password.</div>';
     } else {
         echo '<div class="alert alert-danger">There was an error sending the reset email. Please try again later.</div>';

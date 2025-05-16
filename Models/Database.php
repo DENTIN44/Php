@@ -12,8 +12,7 @@ class Database {
     }
 
     private function loadEnvironment(string $path): void {
-        $root = realpath(__DIR__ . '/../');
-        $dotenv = Dotenv::createImmutable($root);
+        $dotenv = Dotenv::createImmutable($path);
         $dotenv->load();
     }
 

@@ -2,49 +2,62 @@
 require_once 'Models/Database.php';
 require_once 'Models/PasswordReset.php';
 
-// Start by checking the URL parameters
+// Handle link open (GET)
 if (isset($_GET['key']) && isset($_GET['email']) && isset($_GET['action']) && $_GET['action'] == 'reset') {
     $key = $_GET['key'];
     $email = $_GET['email'];
     
-    // Make sure the email is valid
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         echo "<h2>Invalid email address</h2>";
         exit;
     }
 
-    // Connect to the database
-    $db = new Database('localhost', 'username', 'password', 'dbname'); // Use environment variables or a config file here
+    $db = new Database(realpath(__DIR__ . '/../'));
     $passwordReset = new PasswordReset($db, $email, $key);
-    
+
     if (!$passwordReset->isLinkValid()) {
         echo "<h2>Invalid or Expired Link</h2>";
     } else {
-        // Render the password reset form
-        include 'Views/reset_password_form.php';
+        include 'Views/reset_pasword.php';
     }
+    exit; // Ensure GET does not collide with POST
 }
 
-// Handle form submission for password reset
+// Handle form submission (POST)
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'update') {
-    $email = $_POST['email'];
-    $pass1 = $_POST['pass1'];
-    $pass2 = $_POST['pass2'];
+    $key = $_POST['key'] ?? '';
+    $email = $_POST['email'] ?? '';
+    $pass1 = $_POST['pass1'] ?? '';
+    $pass2 = $_POST['pass2'] ?? '';
     $error = '';
 
-    // Ensure passwords match
+    if (empty($key) || empty($email)) {
+        echo "<p>Invalid request. Missing key or email.</p>";
+        exit;
+    }
+
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        echo "<p>Invalid email address.</p>";
+        exit;
+    }
+
     if ($pass1 !== $pass2) {
         $error .= "<p>Password mismatch. Please ensure both passwords match.</p>";
     }
 
-    // Password validation (optional, add as needed)
     if (strlen($pass1) < 8) {
         $error .= "<p>Password must be at least 8 characters long.</p>";
     }
 
     if ($error === '') {
-        $db = new Database('localhost', 'username', 'password', 'dbname');
-        $passwordReset = new PasswordReset($db, $email, null); // key is not required now
+        $db = new Database(realpath(__DIR__ . '/../'));
+        $passwordReset = new PasswordReset($db, $email, $key);
+
+        if (!$passwordReset->isLinkValid()) {
+            echo "<p>Invalid or expired token.</p>";
+            exit;
+        }
+
         if ($passwordReset->updatePassword($pass1)) {
             echo '<p>Password updated successfully! <a href="login.php">Login here</a></p>';
         } else {
