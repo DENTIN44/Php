@@ -144,7 +144,7 @@ class PasswordReset {
         // Small headers that help spam scores
         $mail->addCustomHeader('X-Mailer', 'PHP/' . phpversion());
         $mail->addCustomHeader('MIME-Version', '1.0');
-        $mail->addEmbeddedImage('/home/felix/Php/Assets/images/minharola.jpeg', 'logoimg');
+        $mail->addEmbeddedImage('/home/felix/Php/Assets/images/shutterstock.jpg', 'logoimg');
 
 
         // ——— Content ———
